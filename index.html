@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoLife+ | Sustainable Digital Lifestyle</title>
+
+    <!-- Google Fonts: League Spartan (Headings) & Poppins (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Konfigurasi Tema Tailwind (Warna & Font sesuai permintaan) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ecoLight: '#F8FFF8',
+                        ecoPrimary: '#35A66F',
+                        ecoSecondary: '#CFF8D6',
+                        ecoAccent: '#DFF7FF',
+                        ecoDark: '#1F2937'
+                    },
+                    fontFamily: {
+                        heading: ['"League Spartan"', 'sans-serif'],
+                        body: ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CSS Kustom untuk Animasi & Styling Spesifik */
+        body {
+            background-color: #e5e7eb; /* Warna bg luar aplikasi */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Container Aplikasi - Mensimulasikan layar mobile */
+        #app-container {
+            width: 100%;
+            max-width: 414px; /* Lebar iPhone Max */
+            height: 100vh;
+            max-height: 896px; /* Tinggi maksimal untuk desktop */
+            background-color: #F8FFF8;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @media (min-width: 640px) {
+            #app-container {
+                height: 90vh;
+                border-radius: 2rem; /* Membulat di desktop */
+                border: 8px solid #ffffff;
+            }
+        }
+
+        /* Hide scrollbar untuk tampilan lebih bersih (App feel) */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Animasi Floating Icon (Bumi, Daun, Recycle) */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float-1 { animation: float 4s ease-in-out infinite; }
+        .animate-float-2 { animation: float 5s ease-in-out infinite reverse; }
+        .animate-float-3 { animation: float 3.5s ease-in-out infinite 1s; }
+
+        /* Animasi Fade In & Slide Up */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeUp 0.6s ease-out forwards; }
+        
+        /* Animasi Scale In untuk Card Result */
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Transisi halus antar View/Halaman */
+        .view-section {
+            display: none;
+            height: 100%;
+            width: 100%;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Space untuk bottom nav */
+        }
+        .view-section.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeUp 0.4s ease-out;
+        }
+
+        /* Style untuk Circular Progress di Halaman Result */
+        .circular-progress {
+            transform: rotate(-90deg);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 1.5s ease-in-out;
+        }
+
+        /* Canvas untuk Confetti */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- APP CONTAINER -->
+    <div id="app-container" class="text-ecoDark">
+        
+        <!-- Canvas untuk efek Confetti saat menang -->
+        <canvas id="confetti-canvas"></canvas>
+
+        <!-- TOAST NOTIFICATION CONTAINER (Sistem alert premium kustom) -->
+        <div id="toast-container" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none w-11/12 max-w-[360px]"></div>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1 — WELCOME (Home View)            -->
+        <!-- ========================================== -->
+        <section id="view-home" class="view-section active relative">
+            <!-- Floating Background Elements -->
+            <div class="absolute top-20 left-10 text-5xl animate-float-1 opacity-80">🌍</div>
+            <div class="absolute top-40 right-10 text-4xl animate-float-2 opacity-80">♻️</div>
+            <div class="absolute bottom-40 left-16 text-5xl animate-float-3 opacity-80">🌱</div>
+            
+            <!-- Blob Background Hiasan -->
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-ecoSecondary rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
+            <div class="absolute top-40 -left-20 w-48 h-48 bg-ecoAccent rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
+
+            <div class="flex-1 flex flex-col justify-center items-center px-8 text-center z-10 animate-fade-up">
+                
+                <!-- Logo / Judul Utama -->
+                <div class="inline-block p-4 bg-white rounded-3xl shadow-sm mb-6 border border-ecoSecondary">
+                    <h1 class="font-heading text-4xl font-extrabold text-ecoPrimary tracking-tight">EcoLife<span class="text-ecoSecondary ml-1 text-5xl relative top-1">+</span></h1>
+                </div>
+                
+                <h2 class="font-heading text-3xl font-bold text-ecoDark mb-3">7-Day Eco Challenge</h2>
+                <p class="font-body text-gray-500 mb-10 text-lg">Small actions. Big impact.<br>Start your sustainable journey today.</p>
+                
+                <!-- Tombol Start Challenge -->
+                <button onclick="navigateTo('challenge')" class="w-full max-w-[280px] bg-ecoPrimary text-white font-semibold py-4 px-8 rounded-full shadow-lg shadow-ecoPrimary/30 hover:bg-green-600 hover:scale-105 hover:shadow-xl transition-all duration-300 transform">
+                    Start Challenge
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2 — CHALLENGE (Task List View)     -->
+        <!-- ========================================== -->
+        <section id="view-challenge" class="view-section bg-ecoLight no-scrollbar">
+            <!-- Header Fixed (Progress Info) -->
+            <div class="sticky top-0 bg-ecoLight/95 backdrop-blur-md z-20 px-6 pt-8 pb-4 border-b border-gray-100">
+                <div class="flex justify-between items-end mb-3">
+                    <div>
+                        <h2 class="font-heading text-2xl font-bold">Eco Progress</h2>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span id="level-badge" class="bg-ecoSecondary text-ecoPrimary text-xs font-bold px-2 py-1 rounded-md">Eco Starter 🌱</span>
+                            <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">🔥 <span id="streak-counter">0</span> Day Streak</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span id="progress-percentage" class="font-heading text-2xl font-bold text-ecoPrimary">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-ecoPrimary h-3 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                </div>
+
+                <!-- Simulated Calendar / Day Controls -->
+                <div class="mt-2 flex items-center justify-between bg-white p-3 rounded-xl border border-ecoSecondary/60 shadow-sm">
+                    <div class="text-left">
+                        <div class="text-[9px] uppercase font-bold text-ecoPrimary tracking-wider">Simulasi Kalender</div>
+                        <div id="calendar-day-text" class="text-xs font-semibold text-ecoDark">Hari Ini: Day 1 (Aktif)</div>
+                    </div>
+                    <button id="btn-next-day" onclick="advanceNextDay()" class="bg-ecoPrimary text-white font-semibold text-[11px] py-1.5 px-3 rounded-lg shadow-sm hover:bg-green-600 transition-colors flex items-center gap-1 active:scale-95">
+                        <span>Lewati Hari ☀️</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- List Card Challenge -->
+            <div id="challenge-list" class="px-6 py-4 space-y-4">
+                <!-- Cards akan digenerate oleh JavaScript agar dinamis -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3 — RESULT (Completion View)       -->
+        <!-- ========================================== -->
+        <section id="view-result" class="view-section bg-ecoLight flex-col items-center pt-10 px-6 pb-24">
+            <div class="w-full max-w-sm bg-white rounded-3xl shadow-xl border border-ecoSecondary p-8 flex flex-col items-center relative overflow-hidden animate-scale-in">
+                
+                <!-- Hiasan Background Card -->
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-ecoSecondary rounded-full opacity-50 blur-xl"></div>
+                
+                <h2 class="font-heading text-3xl font-bold text-center mb-2">🏆<br>Challenge Complete!</h2>
+                <p class="text-gray-500 text-sm text-center mb-8">You are officially an Eco Warrior</p>
+                
+                <!-- Circular Progress / Score -->
+                <div class="relative w-40 h-40 mb-8 flex justify-center items-center">
+                    <svg class="circular-progress w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-100 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                        <!-- Dasharray = keliling lingkaran (2*pi*r) = ~251.2. Offset = nilai progress -->
+                        <circle id="score-circle" class="text-ecoPrimary progress-ring__circle stroke-current" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                    </svg>
+                    <div class="absolute flex flex-col items-center justify-center">
+                        <span id="final-score" class="font-heading text-4xl font-extrabold text-ecoDark">0</span>
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Points</span>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4 w-full mb-6">
+                    <div class="bg-ecoAccent rounded-2xl p-4 text-center">
+                        <div class="text-2xl mb-1">☁️</div>
+                        <div id="final-co2" class="font-heading font-bold text-xl text-ecoDark">0 kg</div>
+                        <div class="text-xs text-gray-600">CO₂ Saved</div>
+                    </div>
+                    <div class="bg-ecoSecondary rounded-2xl p-4 text-center">
+                        <div class="text-2xl mb-1">🌳</div>
+                        <div class="font-heading font-bold text-xl text-ecoDark">1 Tree</div>
+                        <div class="text-xs text-gray-600">Equivalent</div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-center font-medium text-gray-600 mb-8 bg-gray-50 py-2 px-4 rounded-lg">
+                    "Great job! Your actions are equivalent to planting 1 tree."
+                </p>
+
+                <button onclick="navigateTo('profile')" class="w-full bg-ecoDark text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-gray-800 transition-colors">
+                    Lihat Profil Saya
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4 — PROFILE (Interactive View)     -->
+        <!-- ========================================== -->
+        <section id="view-profile" class="view-section bg-ecoLight no-scrollbar pb-24 overflow-y-auto">
+            <div class="px-6 pt-8 flex flex-col items-center">
+                
+                <!-- Avatar & Edit Name -->
+                <div class="relative mb-4">
+                    <div class="w-24 h-24 bg-ecoSecondary rounded-full flex items-center justify-center text-5xl border-4 border-white shadow-md relative overflow-hidden transition-all duration-300">
+                        <span id="profile-avatar">🌱</span>
+                    </div>
+                    <button onclick="changeAvatar()" class="absolute bottom-0 right-0 bg-ecoPrimary text-white rounded-full p-2 shadow-md hover:bg-green-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Username & Status -->
+                <div class="text-center mb-6 w-full">
+                    <div class="flex justify-center items-center gap-2">
+                        <h3 id="profile-name" contenteditable="true" class="font-heading text-2xl font-bold text-ecoDark border-b border-dashed border-gray-300 focus:outline-none focus:border-ecoPrimary px-1 rounded transition-colors" title="Klik untuk mengedit nama">Eco Warrior</h3>
+                        <span class="text-xs text-gray-400">✏️</span>
+                    </div>
+                    <span id="profile-badge" class="bg-ecoSecondary text-ecoPrimary text-xs font-bold px-2.5 py-1 rounded-full mt-2 inline-block">Eco Starter 🌱</span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-3 w-full mb-6">
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">⚡</span>
+                        <span id="profile-points" class="font-heading font-extrabold text-xl text-ecoDark">0</span>
+                        <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total Points</span>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                        <span class="text-2xl mb-1">☁️</span>
+                        <span id="profile-co2" class="font-heading font-extrabold text-xl text-ecoDark">0.0 kg</span>
+                        <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">CO₂ Saved</span>
+                    </div>
+                </div>
+
+                <!-- Unlocked Achievements -->
+                <div class="w-full bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 text-left">
+                    <h4 class="font-heading font-bold text-lg mb-3 flex items-center gap-2 text-ecoDark">
+                        <span>🏅</span> Pencapaian & Badge
+                    </h4>
+                    <div class="space-y-3">
+                        <!-- Badge 1 -->
+                        <div id="badge-1" class="flex items-center gap-3 p-2.5 rounded-xl transition-all duration-300 opacity-40 grayscale bg-gray-50">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-xl">🔥</div>
+                            <div class="flex-1">
+                                <h5 class="text-xs font-semibold text-ecoDark">Eco Spark</h5>
+                                <p class="text-[10px] text-gray-500">Selesaikan Tantangan Hari Ke-1</p>
+                            </div>
+                        </div>
+                        <!-- Badge 2 -->
+                        <div id="badge-3" class="flex items-center gap-3 p-2.5 rounded-xl transition-all duration-300 opacity-40 grayscale bg-gray-50">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-xl">🚶</div>
+                            <div class="flex-1">
+                                <h5 class="text-xs font-semibold text-ecoDark">Green Walker</h5>
+                                <p class="text-[10px] text-gray-500">Selesaikan Misi Jalan Kaki (Hari Ke-3)</p>
+                            </div>
+                        </div>
+                        <!-- Badge 3 -->
+                        <div id="badge-7" class="flex items-center gap-3 p-2.5 rounded-xl transition-all duration-300 opacity-40 grayscale bg-gray-50">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-xl">🏆</div>
+                            <div class="flex-1">
+                                <h5 class="text-xs font-semibold text-ecoDark">Carbon Hero</h5>
+                                <p class="text-[10px] text-gray-500">Tuntaskan seluruh tantangan 7 hari</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset Button -->
+                <button onclick="resetApp()" class="w-full bg-red-50 text-red-600 font-semibold py-3 px-6 rounded-xl border border-red-100 hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Ulangi Skenario Challenge
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- BOTTOM NAVBAR (App-like Navigation)        -->
+        <!-- ========================================== -->
+        <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-6 sm:pb-4 rounded-b-2xl sm:rounded-b-none">
+            <!-- Gunakan Inline SVG untuk Icon agar terlihat profesional dan bersih -->
+            <button onclick="navigateTo('home')" class="nav-btn active flex flex-col items-center text-gray-400 hover:text-ecoPrimary transition-colors" data-target="home">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[10px] font-medium">Home</span>
+            </button>
+            
+            <button onclick="navigateTo('challenge')" class="nav-btn flex flex-col items-center text-gray-400 hover:text-ecoPrimary transition-colors" data-target="challenge">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="text-[10px] font-medium">Progress</span>
+            </button>
+            
+            <button onclick="navigateTo('result')" class="nav-btn flex flex-col items-center text-gray-400 hover:text-ecoPrimary transition-colors" data-target="result">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                <span class="text-[10px] font-medium">Result</span>
+            </button>
+            
+            <button onclick="navigateTo('profile')" class="nav-btn flex flex-col items-center text-gray-400 hover:text-ecoPrimary transition-colors" data-target="profile">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span class="text-[10px] font-medium">Profile</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC                           -->
+    <!-- ========================================== -->
+    <script>
+        // Data Challenge (Hari 1 sampai 7)
+        // Total Poin = 20+25+30+20+25+30+30 = 180 Points (Sesuai deskripsi)
+        const challengesData = [
+            { day: 1, title: "Bring Your Own Tumbler", icon: "🥤", reward: 20, desc: "Bawa botol minum sendiri hari ini." },
+            { day: 2, title: "Reduce Plastic", icon: "♻️", reward: 25, desc: "Tolak sedotan & kantong plastik." },
+            { day: 3, title: "Walk 1 KM", icon: "🚶", reward: 30, desc: "Kurangi emisi, jalan kaki 1 KM." },
+            { day: 4, title: "Save Electricity", icon: "💡", reward: 20, desc: "Matikan lampu di siang hari." },
+            { day: 5, title: "Reusable Bag", icon: "👜", reward: 25, desc: "Gunakan tas belanja ramah lingkungan." },
+            { day: 6, title: "Save Water", icon: "🚿", reward: 30, desc: "Mandi maksimal 5 menit hari ini." },
+            { day: 7, title: "Plant Something", icon: "🌱", reward: 30, desc: "Tanam satu bibit pohon/tanaman." }
+        ];
+
+        // State Aplikasi (Penyimpanan Sementara)
+        let currentPoints = 0;
+        let completedCount = 0;
+        let streak = 0;
+        const totalPoints = 180; // Total poin maksimal
+        const totalCO2Max = 3.2; // Total CO2 maksimal dalam kg
+
+        // NEW LOGIC: Aturan Satu Klaim Per Hari (Simulasi Kalender)
+        let currentDayOfChallenge = 1; // Hari berjalan saat ini dalam sistem
+        let hasClaimedToday = false;    // Apakah sudah klaim di hari berjalan ini?
+        let completedDays = {};        // Menyimpan status hari yang sudah diselesaikan (contoh: {1: true})
+
+        // Elemen DOM
+        const challengeListEl = document.getElementById('challenge-list');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressPercentageText = document.getElementById('progress-percentage');
+        const streakCounterText = document.getElementById('streak-counter');
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const views = document.querySelectorAll('.view-section');
+
+        // Fungsi Inisialisasi: Membuat Card secara dinamis
+        function initApp() {
+            renderChallenges();
+            updateProfileStats();
+        }
+
+        // Me-render kartu tantangan secara dinamis dengan aturan ketat klaim harian
+        function renderChallenges() {
+            challengeListEl.innerHTML = '';
+
+            // Update teks status kalender simulasi
+            const calendarText = document.getElementById('calendar-day-text');
+            if (calendarText) {
+                if (hasClaimedToday) {
+                    calendarText.innerHTML = `Hari Ini: <span class="text-ecoPrimary font-bold">Day ${currentDayOfChallenge} (Selesai ✓)</span>`;
+                } else {
+                    calendarText.innerHTML = `Hari Ini: <span class="text-orange-500 font-bold">Day ${currentDayOfChallenge} (Aktif 🔥)</span>`;
+                }
+            }
+
+            // Atur tombol 'Lewati Hari' agar dinonaktifkan jika sudah melebihi hari ke-7
+            const btnNextDay = document.getElementById('btn-next-day');
+            if (btnNextDay) {
+                if (currentDayOfChallenge >= 7 && hasClaimedToday) {
+                    btnNextDay.classList.add('opacity-50', 'cursor-not-allowed');
+                    btnNextDay.disabled = true;
+                } else {
+                    btnNextDay.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btnNextDay.disabled = false;
+                }
+            }
+
+            challengesData.forEach((task, index) => {
+                // Membuat struktur HTML untuk setiap card
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow duration-300 transform animate-fade-up";
+                card.style.animationDelay = `${index * 0.05}s`; // Efek muncul berurutan
+
+                let btnHtml = '';
+                let opacityClass = '';
+
+                // Logika status tombol tantangan
+                if (completedDays[task.day]) {
+                    // Misi sudah dikerjakan di hari sebelumnya
+                    btnHtml = `
+                        <button disabled class="shrink-0 bg-gray-100 text-gray-400 font-semibold text-xs py-2 px-3.5 rounded-xl cursor-not-allowed">
+                            Done ✔
+                        </button>
+                    `;
+                    opacityClass = 'opacity-65';
+                } else if (task.day === currentDayOfChallenge) {
+                    if (hasClaimedToday) {
+                        // Hari ini sudah klaim, tombol tantangan hari ini terkunci
+                        btnHtml = `
+                            <button disabled class="shrink-0 bg-gray-100 text-gray-400 font-semibold text-xs py-2 px-3.5 rounded-xl cursor-not-allowed" title="Anda sudah mengklaim tantangan hari ini">
+                                Done Today
+                            </button>
+                        `;
+                        opacityClass = 'opacity-70';
+                    } else {
+                        // Hari ini belum klaim dan ini adalah hari yang aktif!
+                        btnHtml = `
+                            <button onclick="completeTask(${index})" class="shrink-0 bg-ecoLight text-ecoPrimary border border-ecoPrimary hover:bg-ecoPrimary hover:text-white font-bold text-xs py-2 px-4 rounded-xl transition-all duration-300 transform active:scale-95 shadow-sm">
+                                Complete
+                            </button>
+                        `;
+                    }
+                } else if (task.day < currentDayOfChallenge) {
+                    // Hari lampau tapi terlewat tanpa diselesaikan
+                    btnHtml = `
+                        <button disabled class="shrink-0 bg-red-50 text-red-400 font-semibold text-xs py-2 px-3.5 rounded-xl cursor-not-allowed">
+                            Missed ❌
+                        </button>
+                    `;
+                    opacityClass = 'opacity-50';
+                } else {
+                    // Hari mendatang (Belum terbuka)
+                    btnHtml = `
+                        <button disabled class="shrink-0 bg-gray-50 text-gray-300 border border-gray-200 font-semibold text-xs py-2 px-3.5 rounded-xl cursor-not-allowed flex items-center gap-1" title="Selesaikan hari saat ini dan klik 'Lewati Hari' untuk membuka hari berikutnya">
+                            <span>Locked</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </button>
+                    `;
+                    opacityClass = 'opacity-60';
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 ${opacityClass} transition-opacity duration-300">
+                        <div class="w-12 h-12 bg-ecoLight rounded-xl flex justify-center items-center text-2xl border border-ecoSecondary">
+                            ${task.icon}
+                        </div>
+                        <div class="text-left">
+                            <div class="text-[10px] font-bold text-ecoPrimary tracking-wider uppercase mb-1">Day ${task.day}</div>
+                            <h3 class="font-heading font-semibold text-base text-ecoDark leading-tight mb-1">${task.title}</h3>
+                            <div class="text-[10px] font-medium text-orange-500 bg-orange-50 inline-block px-2 py-0.5 rounded-md">
+                                Reward +${task.reward} Pts
+                            </div>
+                        </div>
+                    </div>
+                    ${btnHtml}
+                `;
+                challengeListEl.appendChild(card);
+            });
+        }
+
+        // Logika saat tombol "Complete" ditekan
+        function completeTask(index) {
+            const task = challengesData[index];
+
+            // Validasi sistem untuk mencegah klaim ilegal
+            if (task.day !== currentDayOfChallenge) {
+                showToast("⚠️ Anda hanya bisa mengerjakan misi di hari yang aktif!");
+                return;
+            }
+            if (hasClaimedToday) {
+                showToast("⚠️ Anda sudah menyelesaikan tantangan hari ini! Silakan klik 'Lewati Hari' untuk besok.");
+                return;
+            }
+
+            // Update State
+            currentPoints += task.reward;
+            completedCount++;
+            streak++; 
+            hasClaimedToday = true;
+            completedDays[task.day] = true;
+
+            // Memunculkan pesan sukses (Toast Premium)
+            showToast(`🌱 Sukses! Day ${task.day} selesai. +${task.reward} Pts!`);
+
+            // Update UI & Data di bagian Profile
+            updateProfileStats();
+
+            // Render ulang seluruh list tantangan agar mengubah state visual tombol lainnya
+            renderChallenges();
+
+            // Hitung dan Update Progress Bar
+            updateProgressBar();
+
+            // Cek apakah semua misi sudah selesai
+            if (completedCount === challengesData.length) {
+                setTimeout(() => {
+                    finishChallenge();
+                }, 1200); // Berikan jeda waktu agar transisi terasa alami
+            }
+        }
+
+        // Fungsi memperbarui visual progress bar
+        function updateProgressBar() {
+            const percent = Math.round((completedCount / challengesData.length) * 100);
+            progressBarFill.style.width = `${percent}%`;
+            progressPercentageText.innerText = `${percent}%`;
+            streakCounterText.innerText = streak;
+
+            // Perbarui juga badge level berdasarkan persentase
+            const levelBadge = document.getElementById('level-badge');
+            if (levelBadge) {
+                if (percent === 100) levelBadge.innerText = "Eco Warrior 🏆";
+                else if (percent >= 50) levelBadge.innerText = "Eco Enthusiast 🌳";
+                else levelBadge.innerText = "Eco Starter 🌱";
+            }
+        }
+
+        // Fungsi Simulasi Maju Hari (Untuk memfasilitasi demo juri di satu perangkat)
+        function advanceNextDay() {
+            if (!hasClaimedToday) {
+                showToast("⚠️ Selesaikan tantangan hari ini terlebih dahulu!");
+                return;
+            }
+            if (currentDayOfChallenge >= 7) {
+                showToast("🎉 Semua tantangan 7 hari telah selesai!");
+                return;
+            }
+
+            // Maju ke hari berikutnya
+            currentDayOfChallenge++;
+            hasClaimedToday = false; // Reset status klaim untuk hari baru
+            
+            showToast(`☀️ Hari berganti! Selamat datang di Day ${currentDayOfChallenge}.`);
+            
+            // Render ulang
+            renderChallenges();
+        }
+
+        // Fungsi memperbarui data halaman Profile secara real-time
+        function updateProfileStats() {
+            // Hitung perolehan CO2 Saved proporsional
+            const currentCO2Saved = ((completedCount / challengesData.length) * totalCO2Max).toFixed(1);
+
+            // Update DOM Profile
+            const profilePoints = document.getElementById('profile-points');
+            const profileCO2 = document.getElementById('profile-co2');
+            const profileBadge = document.getElementById('profile-badge');
+
+            if (profilePoints) profilePoints.innerText = currentPoints;
+            if (profileCO2) profileCO2.innerText = currentCO2Saved + " kg";
+
+            if (profileBadge) {
+                if (completedCount >= 7) {
+                    profileBadge.innerText = "Eco Warrior 🏆";
+                    profileBadge.className = "bg-ecoPrimary text-white text-xs font-bold px-2.5 py-1 rounded-full mt-2 inline-block";
+                } else if (completedCount >= 4) {
+                    profileBadge.innerText = "Eco Enthusiast 🌳";
+                    profileBadge.className = "bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full mt-2 inline-block";
+                } else {
+                    profileBadge.innerText = "Eco Starter 🌱";
+                    profileBadge.className = "bg-ecoSecondary text-ecoPrimary text-xs font-bold px-2.5 py-1 rounded-full mt-2 inline-block";
+                }
+            }
+
+            // Pembukaan badge pencapaian (Achievements)
+            const badge1 = document.getElementById('badge-1');
+            const badge3 = document.getElementById('badge-3');
+            const badge7 = document.getElementById('badge-7');
+
+            if (badge1 && completedDays[1]) {
+                badge1.classList.remove('opacity-40', 'grayscale');
+                badge1.classList.add('bg-orange-50', 'border-l-4', 'border-orange-400');
+            }
+            if (badge3 && completedDays[3]) {
+                badge3.classList.remove('opacity-40', 'grayscale');
+                badge3.classList.add('bg-blue-50', 'border-l-4', 'border-blue-400');
+            }
+            if (badge7 && completedCount >= 7) {
+                badge7.classList.remove('opacity-40', 'grayscale');
+                badge7.classList.add('bg-green-50', 'border-l-4', 'border-green-400');
+            }
+        }
+
+        // Fitur Ganti Avatar Interaktif di Profil
+        const avatarPool = ["🌱", "🌍", "♻️", "🦊", "🐼", "🚴", "🥑", "🌻", "💡"];
+        let currentAvatarIndex = 0;
+        function changeAvatar() {
+            currentAvatarIndex = (currentAvatarIndex + 1) % avatarPool.length;
+            const newAvatar = avatarPool[currentAvatarIndex];
+            document.getElementById('profile-avatar').innerText = newAvatar;
+            showToast(`Avatar diubah menjadi ${newAvatar}!`);
+        }
+
+        // Sistem Toast Notification Elegan
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = "bg-ecoDark/95 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-fade-up border border-gray-700/30 w-full pointer-events-auto transition-all duration-300";
+            toast.innerHTML = `
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Hilangkan setelah 3 detik
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Reset Aplikasi untuk Mengulang Skenario Demo
+        function resetApp() {
+            currentPoints = 0;
+            completedCount = 0;
+            streak = 0;
+            currentDayOfChallenge = 1;
+            hasClaimedToday = false;
+            completedDays = {};
+
+            // Reset UI Challenges
+            progressBarFill.style.width = "0%";
+            progressPercentageText.innerText = "0%";
+            streakCounterText.innerText = "0";
+
+            // Reset UI Result Page
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('final-co2').innerText = "0.0 kg";
+            document.getElementById('score-circle').style.strokeDashoffset = "251.2";
+
+            // Reset UI Achievements Badges
+            const badges = ['badge-1', 'badge-3', 'badge-7'];
+            badges.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = "flex items-center gap-3 p-2.5 rounded-xl transition-all duration-300 opacity-40 grayscale bg-gray-50";
+                }
+            });
+
+            // Default Avatar & Username
+            document.getElementById('profile-avatar').innerText = "🌱";
+            document.getElementById('profile-name').innerText = "Eco Warrior";
+
+            stopConfetti();
+            initApp();
+            navigateTo('challenge');
+
+            showToast("🔄 Simulator di-reset! Silakan mulai dari Hari ke-1.");
+        }
+
+        // Fungsi saat tantangan selesai semua (Menuju halaman Result)
+        function finishChallenge() {
+            // Update data di halaman Result
+            document.getElementById('final-score').innerText = currentPoints;
+            document.getElementById('final-co2').innerText = totalCO2Max.toFixed(1) + " kg";
+            
+            // Animasi Lingkaran SVG
+            // 251.2 adalah keliling. Offset 0 artinya lingkaran penuh.
+            setTimeout(() => {
+                document.getElementById('score-circle').style.strokeDashoffset = "0";
+            }, 500);
+
+            // Pindah halaman & mainkan confetti
+            navigateTo('result');
+            startConfetti();
+        }
+
+        // Fungsi Navigasi antar halaman (Tab sistem)
+        function navigateTo(targetViewId) {
+            // Sembunyikan semua section
+            views.forEach(view => view.classList.remove('active'));
+            // Tampilkan target section
+            document.getElementById(`view-${targetViewId}`).classList.add('active');
+
+            // Update warna icon bottom navbar
+            navButtons.forEach(btn => {
+                if(btn.dataset.target === targetViewId) {
+                    btn.classList.add('text-ecoPrimary');
+                    btn.classList.remove('text-gray-400');
+                } else if(btn.dataset.target) {
+                    btn.classList.remove('text-ecoPrimary');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            // Jika pindah dari halaman Result, hentikan confetti
+            if(targetViewId !== 'result') {
+                stopConfetti();
+            }
+        }
+
+        // --- SISTEM PARTIKEL CONFETTI SEDERHANA ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confettiParticles = [];
+        let animationId;
+
+        function resizeCanvas() {
+            const container = document.getElementById('app-container');
+            if (canvas && container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height - canvas.height; // Mulai dari atas
+                this.w = Math.random() * 10 + 5;
+                this.h = Math.random() * 5 + 5;
+                this.vy = Math.random() * 3 + 2; // Kecepatan jatuh
+                this.vx = Math.random() * 2 - 1; // Goyangan horizontal
+                this.color = ['#35A66F', '#CFF8D6', '#DFF7FF', '#FFD700', '#FF6B6B'][Math.floor(Math.random() * 5)];
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 0.2 - 0.1;
+            }
+            update() {
+                this.y += this.vy;
+                this.x += this.vx;
+                this.angle += this.spin;
+                // Ulangi dari atas jika lewat layar
+                if (this.y > canvas.height) {
+                    this.y = -10;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+                ctx.restore();
+            }
+        }
+
+        function startConfetti() {
+            canvas.style.display = 'block';
+            resizeCanvas();
+            confettiParticles = [];
+            for(let i = 0; i < 80; i++) {
+                confettiParticles.push(new Particle());
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confettiParticles.forEach(p => { p.update(); p.draw(); });
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function stopConfetti() {
+            canvas.style.display = 'none';
+            cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Event Listener untuk Resize Windows (Responsive Confetti)
+        window.addEventListener('resize', resizeCanvas);
+
+        // Jalankan Inisialisasi saat web diload
+        window.onload = function () {
+            initApp();
+        };
+
+    </script>
+</body>
+</html>
